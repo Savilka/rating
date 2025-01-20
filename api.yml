@@ -1,0 +1,181 @@
+openapi: 3.0.0
+info:
+  title: Leaderboard API
+  description: API для управления пользователями и получения данных о лидерборде.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+paths:
+  /users:
+    post:
+      summary: Создать нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 3
+                  maxLength: 50
+                  pattern: '^[\w]*$'
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+        '409':
+          description: Имя пользователя уже занято
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+
+  /users/{user}/score:
+    post:
+      summary: Добавить очки пользователю
+      parameters:
+        - name: user
+          in: path
+          required: true
+          description: ID пользователя
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                points:
+                  type: integer
+                  minimum: 1
+                  maximum: 10000
+      responses:
+        '200':
+          description: Очки успешно добавлены
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  score:
+                    type: integer
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+
+  /leaderboard/top:
+    get:
+      summary: Получить топ 10 пользователей
+      parameters:
+        - name: period
+          in: query
+          required: true
+          description: Период для получения топа (day, week, month)
+          schema:
+            type: string
+            enum: [day, week, month]
+      responses:
+        '200':
+          description: Топ пользователей успешно получен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period:
+                    type: string
+                  scores:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        score:
+                          type: integer
+                        name:
+                          type: string
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+
+  /leaderboard/rank/{user}:
+    get:
+      summary: Получить ранг пользователя
+      parameters:
+        - name: user
+          in: path
+          required: true
+          description: ID пользователя
+          schema:
+            type: integer
+        - name: period
+          in: query
+          required: true
+          description: Период для получения ранга (day, week, month)
+          schema:
+            type: string
+            enum: [day, week, month]
+      responses:
+        '200':
+          description: Ранг пользователя успешно получен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  period:
+                    type: string
+                  score:
+                    type: integer
+                  rank:
+                    type: integer
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
