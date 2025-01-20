@@ -13,23 +13,15 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd zip pdo pdo_mysql
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-COPY . .
+COPY . /var/www/html
 
-RUN composer install --no-dev --prefer-dist \
-    && npm install \
-    && npm install -D tailwindcss postcss autoprefixer
-CMD ["whoami"]
 RUN chown -R 33:33 /var/www/html \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-RUN chown -R 33:33 /var/www/html/vendor \
-    && chmod -R 775 /var/www/html/vendor
-
-
-CMD ["php-fpm"]
+CMD ["sh", "-c", "composer install --no-dev && npm install && php-fpm"]
 
