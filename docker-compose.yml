@@ -4,6 +4,19 @@ services:
             context: .
             dockerfile: Dockerfile
         image: laravel-app
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - app-network
+        depends_on:
+            - mysql
+    web:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: laravel-app-frontend
+        working_dir: /var/www/html
+        command: npm run dev
         ports:
             - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
         volumes:
@@ -11,8 +24,7 @@ services:
         networks:
             - app-network
         depends_on:
-            - mysql
-        command: npm run dev
+            - app
     mysql:
         image: 'mysql/mysql-server:8.0'
         ports:
