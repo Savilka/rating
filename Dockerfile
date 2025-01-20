@@ -21,7 +21,7 @@ COPY . .
 
 RUN composer install --no-dev --prefer-dist \
     && npm install \
-    && npm run build
+    && npm install -D tailwindcss postcss autoprefixer
 CMD ["whoami"]
 RUN chown -R 33:33 /var/www/html \
     && chmod -R 775 /var/www/html/storage \
