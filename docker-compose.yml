@@ -12,6 +12,7 @@ services:
             - app-network
         depends_on:
             - mysql
+        command: npm run dev
     mysql:
         image: 'mysql/mysql-server:8.0'
         ports:

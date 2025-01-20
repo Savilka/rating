@@ -30,7 +30,6 @@ RUN chown -R 33:33 /var/www/html \
 RUN chown -R 33:33 /var/www/html/vendor \
     && chmod -R 775 /var/www/html/vendor
 
-RUN npm run dev
 
 CMD ["php-fpm"]
 
