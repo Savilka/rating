@@ -6,6 +6,10 @@ use App\Models\User;
 
 class UserRepository
 {
+    /**
+     * @param array $data
+     * @return User
+     */
     public function createUser(array $data): User
     {
         $user = new User();
@@ -17,6 +21,11 @@ class UserRepository
         return $user;
     }
 
+    /**
+     * @param User $user
+     * @param int $points
+     * @return User
+     */
     public function addPoints(User $user, int $points): User
     {
         $user->score += $points;

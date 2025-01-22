@@ -15,6 +15,10 @@ class UserController extends Controller
     ) {
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), ['name' => 'required|max:50|min:3|regex:/^[\w]*$/']);
@@ -39,6 +43,11 @@ class UserController extends Controller
         ], 201);
     }
 
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function addScore(User $user, Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), ['points' => 'required|integer|min:1|max:10000']);

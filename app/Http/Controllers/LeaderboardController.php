@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Periods;
 use App\Models\User;
 use App\Services;
 use Illuminate\Http\JsonResponse;
@@ -11,20 +12,21 @@ use Validator;
 
 class LeaderboardController extends Controller
 {
-    const DAY_PERIOD_NAME   = 'day';
-    const WEEK_PERIOD_NAME  = 'week';
-    const MONTH_PERIOD_NAME = 'month';
-
     public function __construct(
         protected Services\LeaderboardService $leaderboardService
     ) {
     }
 
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function rank(User $user, Request $request): JsonResponse
     {
         $validator = Validator::make(
             $request->all(),
-            ['period' => ['required', Rule::in(self::DAY_PERIOD_NAME, self::WEEK_PERIOD_NAME, self::MONTH_PERIOD_NAME)]]
+            ['period' => ['required', Rule::in(Periods::DAY->value, Periods::WEEK->value, Periods::MONTH->value)]]
         );
         if ($validator->fails()) {
             return response()->json([
@@ -33,7 +35,11 @@ class LeaderboardController extends Controller
         }
 
         $period = $request->get('period');
-        [$rank, $score] = $this->leaderboardService->getUserRankAndScoreByPeriod($user, $period);
+        if ($request->get('new') == '1') {
+            [$rank, $score] = $this->leaderboardService->getUserRankAndScoreByPeriodNew($user, $period);
+        } else {
+            [$rank, $score] = $this->leaderboardService->getUserRankAndScoreByPeriod($user, $period);
+        }
 
         return response()->json([
             'id'     => $user->id,
@@ -43,11 +49,15 @@ class LeaderboardController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function top(Request $request): JsonResponse
     {
         $validator = Validator::make(
             $request->all(),
-            ['period' => ['required', Rule::in(self::DAY_PERIOD_NAME, self::WEEK_PERIOD_NAME, self::MONTH_PERIOD_NAME)]]
+            ['period' => ['required', Rule::in(Periods::DAY->value, Periods::WEEK->value, Periods::MONTH->value)]]
         );
         if ($validator->fails()) {
             return response()->json([

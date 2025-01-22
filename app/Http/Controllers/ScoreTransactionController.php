@@ -13,6 +13,9 @@ class ScoreTransactionController extends Controller
     ) {
     }
 
+    /**
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application
+     */
     public function index()
     {
         return view('transactions', [

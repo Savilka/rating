@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Enums\Periods;
 use App\Models\ScoreTransaction;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -12,6 +13,11 @@ class ScoreTransactionRepository
 {
     const TOP_TEN = 10;
 
+    /**
+     * @param User $user
+     * @param int $score
+     * @return ScoreTransaction
+     */
     public function addNewTransaction(User $user, int $score): ScoreTransaction
     {
         $transaction = new ScoreTransaction();
@@ -24,12 +30,36 @@ class ScoreTransactionRepository
         return $transaction;
     }
 
+    /**
+     * @param string $period
+     * @return Collection
+     */
+    public function getTransactionsByPeriod(string $period): Collection
+    {
+        $startDate = match ($period) {
+            Periods::DAY->value   => Carbon::now()->startOfDay(),
+            Periods::WEEK->value  => Carbon::now()->startOfWeek(),
+            Periods::MONTH->value => Carbon::now()->startOfMonth(),
+        };
+
+        return ScoreTransaction::query()
+            ->selectRaw('user_id, sum(score) as total')
+            ->where('created_at', '>=', $startDate)
+            ->groupBy('user_id')
+            ->get();
+    }
+
+    /**
+     * @param User $user
+     * @param string $period
+     * @return Collection
+     */
     public function getUserRankByPeriod(User $user, string $period): Collection
     {
         $startDate = match ($period) {
-            'day'   => Carbon::now()->startOfDay(),
-            'week'  => Carbon::now()->startOfWeek(),
-            'month' => Carbon::now()->startOfMonth(),
+            Periods::DAY->value   => Carbon::now()->startOfDay(),
+            Periods::WEEK->value  => Carbon::now()->startOfWeek(),
+            Periods::MONTH->value => Carbon::now()->startOfMonth(),
         };
 
         $subQuery = DB::table('users')
@@ -51,12 +81,16 @@ class ScoreTransactionRepository
             ->get();
     }
 
+    /**
+     * @param string $period
+     * @return Collection
+     */
     public function getTopTenUsersInLeaderboard(string $period): Collection
     {
         $startDate = match ($period) {
-            'day'   => Carbon::now()->startOfDay(),
-            'week'  => Carbon::now()->startOfWeek(),
-            'month' => Carbon::now()->startOfMonth(),
+            Periods::DAY->value   => Carbon::now()->startOfDay(),
+            Periods::WEEK->value  => Carbon::now()->startOfWeek(),
+            Periods::MONTH->value => Carbon::now()->startOfMonth(),
         };
 
         $subQuery = DB::table('score_transactions')

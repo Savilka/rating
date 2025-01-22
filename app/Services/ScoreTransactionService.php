@@ -13,6 +13,11 @@ class ScoreTransactionService
     ) {
     }
 
+    /**
+     * @param User $user
+     * @param int $score
+     * @return ScoreTransaction
+     */
     public function addNewTransaction(User $user, int $score): ScoreTransaction
     {
         return $this->scoreTransactionRepository->addNewTransaction($user, $score);
