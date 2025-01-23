@@ -71,9 +71,9 @@ class LeaderboardController extends Controller
         $data = [];
         foreach ($users as $i => $user) {
             $data[$i + 1] = [
-                'id'    => $user->user_id,
-                'score' => $user->total,
-                'name'  => $user->name,
+                'id'    => $user['id'],
+                'score' => $user['score'],
+                'name'  => $user['name'],
             ];
         }
 

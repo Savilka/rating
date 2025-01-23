@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Enums\Periods;
 use App\Models\ScoreTransaction;
 use App\Models\User;
 use App\Repositories;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class LeaderboardService
@@ -38,14 +40,24 @@ class LeaderboardService
      */
     public function getUserRankAndScoreByPeriodNew(User $user, string $period): array
     {
-        $scoreTransactions = $this->scoreTransactionRepository->getTransactionsByPeriod($period);
-        $userScoresById    = [];
-        foreach ($scoreTransactions as $scoreTransaction) {
-            $userScoresById[$scoreTransaction->user_id] = $scoreTransaction->total;
-        }
+        $startDay = match ($period) {
+            Periods::DAY->value   => Carbon::now()->day,
+            Periods::WEEK->value  => Carbon::now()->startOfWeek()->day,
+            Periods::MONTH->value => Carbon::now()->startOfMonth()->day,
+        };
 
-        if (!array_key_exists($user->id, $userScoresById)) {
-            return [count($userScoresById), 0];
+        $today = Carbon::now()->day;
+
+        $allUserData = $this->userRepository->getAllUsersScoreData();
+
+        $userScoresById = [];
+        foreach ($allUserData as $userData) {
+            $userDataArr       = json_decode($userData->scores_data, true);
+            $userScoreByPeriod = 0;
+            for ($i = $startDay; $i <= $today; $i++) {
+                $userScoreByPeriod += $userDataArr[$i];
+            }
+            $userScoresById[$userData->user_id] = $userScoreByPeriod;
         }
 
         uasort($userScoresById, function ($a, $b) {
@@ -60,10 +72,48 @@ class LeaderboardService
 
     /**
      * @param string $period
-     * @return Collection
+     * @return array
      */
-    public function getTopTenUsersInLeaderboard(string $period): Collection
+    public function getTopTenUsersInLeaderboard(string $period): array
     {
-        return $this->scoreTransactionRepository->getTopTenUsersInLeaderboard($period);
+        $startDay = match ($period) {
+            Periods::DAY->value   => Carbon::now()->day,
+            Periods::WEEK->value  => Carbon::now()->startOfWeek()->day,
+            Periods::MONTH->value => Carbon::now()->startOfMonth()->day,
+        };
+
+        $today = Carbon::now()->day;
+
+        $allUserData = $this->userRepository->getAllUsersScoreData();
+
+        $userScoresById = [];
+        foreach ($allUserData as $userData) {
+            $userDataArr       = json_decode($userData->scores_data, true);
+            $userScoreByPeriod = 0;
+            for ($i = $startDay; $i <= $today; $i++) {
+                $userScoreByPeriod += $userDataArr[$i];
+            }
+            $userScoresById[$userData->user_id] = $userScoreByPeriod;
+        }
+
+        uasort($userScoresById, function ($a, $b) {
+            if ($a == $b) {
+                return 0;
+            }
+            return ($a > $b) ? -1 : 1;
+        });
+
+        $topTenUsersWithoutNames = array_slice($userScoresById, 0, 10, true);
+        $topTenUsers             = $this->userRepository->getUsersByIds(array_keys($topTenUsersWithoutNames));
+
+        $result = [];
+        foreach ($topTenUsersWithoutNames as $id => $score) {
+            $result[] = [
+                'id'    => $id,
+                'score' => $score,
+                'name'  => $topTenUsers->find($id)->name,
+            ];
+        }
+        return $result;
     }
 }
